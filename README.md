@@ -31,7 +31,7 @@ The first main section of the paper will be chapter 3, where we look in detail a
 
 Chapter 4 - Implementing Routing Heuristics to Improve Performance of the Tegola Network (10-12 pages)
 
-This section will provide the implementation details of systems to effectively improve the performance metrics discussed in chapter 3. This could be split into a few different sections, perhaps with the first one discussing the proportional splitting of traffic between gateways, and the subsequent sections discussing the tweaks and improvements for the max-flow formulations.
+This section will provide the implementation details of systems to effectively improve the performance metrics discussed in chapter 3. This could be split into a few different subsections, perhaps with the first one discussing the proportional splitting of traffic between gateways, and the subsequent sections discussing the tweaks and improvements for the max-flow formulations.
 
 Chapter 5 - Quantitative Analysis of Implemented Systems (8-10 pages)
 
