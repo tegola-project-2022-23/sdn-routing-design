@@ -16,7 +16,7 @@ Brief section to begin the thesis that outlines the following:
 - basic explanation of the problem we are trying to solve
 - approach taken
 - main achievements of the project
-- statistical results
+- summary of statistical results
 
 Chapter 2 - Background (5-7 pages)
 This section puts the project in context by examining Tegola's current setup and its shortcomings. Looking a little at the history of Internet access in Tegola to give context to how it currently operates. We perform a literature review, which is a detailed analysis of the relevant research in the areas related to our project. We use these research papers to show what has been done, and how we are adjusting/changing the scene to produce something new in this project.
