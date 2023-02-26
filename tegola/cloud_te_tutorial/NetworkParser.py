@@ -37,10 +37,13 @@ def parse_demands(network, scale=1):
                 if to_node not in demand_matrix[from_node]:
                     demand_matrix[from_node][to_node] = []
                 demand_matrix[from_node][to_node].append(dem)
-        for from_node in demand_matrix:
-            for to_node in demand_matrix[from_node]:
-                max_demand = max(demand_matrix[from_node][to_node])
-                network.add_demand(str(from_node), str(to_node), max_demand, scale)
+        with open("max_demands.txt", "w") as file:
+            for from_node in demand_matrix:
+                for to_node in demand_matrix[from_node]:
+                    max_demand = max(demand_matrix[from_node][to_node])
+                    file.write(str(max_demand) + " ")
+                    network.add_demand(str(from_node), str(to_node), max_demand, scale)
+            file.write("\n")
     if network.tunnels:
         remove_demands_without_tunnels(network)
 
