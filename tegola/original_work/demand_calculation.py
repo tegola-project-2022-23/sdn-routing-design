@@ -138,7 +138,7 @@ def split_improved(demand, split_proportion):
     for i in range(9):
         total_demand_out += demand[i][10] + demand[i][11]
         total_demand_in += demand[10][i] + demand[11][i]
-    print("total traffic: " + str(total_demand_in + total_demand_out))
+    #print("total traffic: " + str(total_demand_in + total_demand_out))
 
     mhi_demand_out = total_demand_out * split_proportion
     mhi_demand_in = total_demand_in * split_proportion

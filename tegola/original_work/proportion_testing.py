@@ -7,35 +7,49 @@ import csv
 from demand_calculation import *
 import os
 
-def read_input_file(filename):
-    list = []
+def read_input_file(filename, proportion_to_mhi):
+
     with open(filename, "r") as file:
         for line in file:
-            line = file.readline()
             entry = line.split(" ")
             entry = np.reshape(np.array([float(x) for x in entry[0:len(entry) - 1]]), (12,12))
+            entry = perform_split(entry, proportion_to_mhi)
+            return entry
 
-            entry = return_to_original(entry)
-            print(entry)
-            list.append(entry)
-    return list
-
-def return_to_original(matrix):
+def perform_split(matrix, proportion_to_mhi):
+    # Some preprocessing due to an error in data collection
     for i in range(12):
         if i == 0 or i == 3:
-            matrix[i][10] = matrix[i][10] + matrix[i][11]
-            matrix[i][11] = 0
-
-            matrix[10][i] = matrix[10][i] + matrix[11][i]
-            matrix[11][i] = 0
+            continue
         else:
-            matrix[i][11] = matrix[i][10] + matrix[i][11]
+            matrix[i][11] = matrix[i][10]
             matrix[i][10] = 0
 
-            matrix[11][i] = matrix[10][i] + matrix[11][i]
+            matrix[11][i] = matrix[10][i]
             matrix[10][i] = 0
-    return matrix
+        
+    return split_improved(matrix, proportion_to_mhi)
 
 if __name__ == "__main__":
-    filename = "thirty_seventy.txt"
-    list = read_input_file(filename)
+    filename = "demands/max_demands.txt"
+
+    name = ["demands" + str(i) for i in range(101)]
+
+    for i in range(101):
+
+        list = []
+
+        if i == 0:
+            index = 0
+        else:
+            index = i * 0.01
+        
+        with open("demands/" + name[i] + ".txt", "w") as file:
+            entry = read_input_file(filename, index)
+            for i in range(12):
+                for j in range(12):
+                    file.write(str(entry[i][j]) + " ")
+            file.write("\n")
+
+        
+
