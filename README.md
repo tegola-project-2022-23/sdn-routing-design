@@ -6,7 +6,9 @@ demand_calculation.py - interacts with Zabbix Monitoring Software to retrieve tr
 
 prelim_calculations.py - performs the necessary data gathering and cleaning prior to analyising and visualising it in data_analysis.ipynb.
 
-data_analysis.ipynb - produces statistics and visualisations about traffic patterns in the Tegola network. This file will provide the basis for the first proper thesis chapter (Motivation/Data Analysis). 
+data_analysis.ipynb - produces statistics and visualisations about traffic patterns in the Tegola network. This file will provide the basis for the first proper thesis chapter (Motivation/Data Analysis).
+
+proportion_testing.py - helper file to manipulate the demand matricies for different split proportions. Mainly used to avoid making a million requests to zabbix every time we want to test a different split proportion.
 
 
 # Thesis Outline
