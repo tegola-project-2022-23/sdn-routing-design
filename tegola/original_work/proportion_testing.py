@@ -77,7 +77,7 @@ if __name__ == "__main__":
     keys = np.array(list(dict.keys()))
     values = np.array(list(dict.values()))
     fig, ax = plt.subplots(1, 1, figsize=(6,6))
-    ax.plot(keys[7:30], values[7:30])
+    ax.plot(keys, values)
     ax.set_title("Unmet demands for varying proportions of traffic sent to MHI")
     ax.set_xlabel("Traffic to MHI (%)")
     ax.set_ylabel("Unmet Demands (Mb)")
