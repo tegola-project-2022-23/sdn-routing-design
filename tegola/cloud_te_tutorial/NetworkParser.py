@@ -52,7 +52,7 @@ def parse_tunnels(network):
     for node1 in network.nodes:
         for node2 in network.nodes:
             if node1 == node2: continue
-            paths = network.k_shortest_paths(node1, node2, 1)
+            paths = network.k_shortest_paths(node1, node2, 20)
             for path in paths:
                 tunnel = network.add_tunnel(path)
     if network.demands:
