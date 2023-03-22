@@ -1,5 +1,5 @@
 to_node   from_node   capacity          prob_failure
-2           1          1000           .004
+2           1          99.25           .004
 3           1          1000           .004
 1           2          0           .004
 4           2          1000           .004

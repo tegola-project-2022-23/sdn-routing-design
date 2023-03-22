@@ -2,9 +2,9 @@ import random
 from NetworkTopology import *
 import csv
 
-def parse_topology(network_name):
+def parse_topology(network_name, topology_filename):
     network = Network(network_name)
-    with open(f"data/{network_name}/topology.txt") as fi:
+    with open(f"data/{network_name}/" + topology_filename) as fi:
         reader = csv.reader(fi, delimiter=" ")
         for row_ in reader:
             if row_[0] == 'to_node': continue
@@ -17,11 +17,11 @@ def parse_topology(network_name):
             network.add_edge(from_node, to_node, 200, capacity)            
     return network
 
-def parse_demands(network, scale=1):
+def parse_demands(network, demand_filename, scale=1):
     network_name = network.name
     num_nodes = len(network.nodes)
     demand_matrix = {}
-    with open(f"data/{network_name}/demand.txt") as fi:
+    with open(f"data/{network_name}/" + demand_filename) as fi:
         reader = csv.reader(fi, delimiter=" ")
         for row_ in reader:
             if row_[0] == 'to_node': continue
@@ -37,13 +37,13 @@ def parse_demands(network, scale=1):
                 if to_node not in demand_matrix[from_node]:
                     demand_matrix[from_node][to_node] = []
                 demand_matrix[from_node][to_node].append(dem)
-        with open("max_demands.txt", "w") as file:
-            for from_node in demand_matrix:
-                for to_node in demand_matrix[from_node]:
-                    max_demand = max(demand_matrix[from_node][to_node])
-                    file.write(str(max_demand) + " ")
-                    network.add_demand(str(from_node), str(to_node), max_demand, scale)
-            file.write("\n")
+        #with open("max_demands.txt", "w") as file:
+        #    for from_node in demand_matrix:
+        #        for to_node in demand_matrix[from_node]:
+        #            max_demand = max(demand_matrix[from_node][to_node])
+        #            file.write(str(max_demand) + " ")
+        #            network.add_demand(str(from_node), str(to_node), max_demand, scale)
+        #    file.write("\n")
     if network.tunnels:
         remove_demands_without_tunnels(network)
 
