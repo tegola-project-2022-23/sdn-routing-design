@@ -275,22 +275,22 @@ class Network:
         import networkx as nx
         G = self.to_nx()
         pos = nx.spring_layout(G, weight=1, k=0.5, 
-                               pos={'1':(-2, 6), '2':(0, 10), '3':(0, 3), '4':(3, 10), 
-                                    '5': (6, 12), '6': (6, 8), '7': (14, 8), '8':(9, 4),
-                                    '9':(3, 3), '10': (5, 5), '11': (6, 1), '12': (9, 1), '13': (13, 1)}, 
+                               pos={'1':(0, 6), '2':(2, 9), '3':(5, 11), '4':(4, 7), 
+                                    '5': (10, 7), '6': (7, 5), '7': (2, 3), '8':(5, 5),
+                                    '9':(5, 0), '10': (8, 0), '11': (11, 0)}, 
                                fixed=['1', '2', '3', '4', '5', '6', '7', '8', '9',
-                                      '10', '11', '12', '13'])
+                                      '10', '11'])
         plt.figure(figsize=(8,6))
         options = {
             'width': 1,
             'arrowstyle': '-|>',
             'arrowsize': 12
         }
-        nx.draw(G, pos, edge_color = 'black', linewidths = 1,
+        nx.draw(G, pos, edge_color = 'black', linewidths = 2,
                 # connectionstyle='arc3, rad = 0.1',
-                node_size = 500, node_color = 'pink',
+                node_size = [750, 1750, 750, 750, 750, 750, 750, 750, 750, 750, 750], node_color = ['#FF7377', '#FFFF66', '#FF7377', '#ADD8E6', '#ADD8E6', '#ADD8E6', '#ADD8E6', '#ADD8E6', '#ADD8E6', '#ADD8E6', '#ADD8E6'],
                 alpha = 0.9, with_labels = True, **options)
-        nx.draw_networkx_edge_labels(G, pos, font_size=8,
+        nx.draw_networkx_edge_labels(G, pos, font_size=9,
                                      label_pos=0.3,
                                      edge_labels=labels)
         ax = plt.gca()
