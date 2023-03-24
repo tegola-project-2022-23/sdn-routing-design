@@ -12,6 +12,7 @@ class network:
         self.network = parse_topology(self.network_name, topo_filename)
         self.allocations = {}
 
+    # Run setup for the network
     def setup(self, demand_filename):
         parse_demands(self.network, demand_filename)
         parse_tunnels(self.network)
@@ -19,6 +20,7 @@ class network:
         self.G = self.network.to_nx()
         self.capacity_labels = { edge : self.network.edges[edge].capacity for edge in self.G.edges } 
 
+    # Solve the network with demands and topology for basic flow allocations
     def basic_solve(self):
         mip = CvxSolver()
         solver = TESolver(mip, self.network)
@@ -30,6 +32,7 @@ class network:
     def get_allocations(self):
         return get_edge_flow_allocations(self.network)
     
+    # Write demands to data files in either up or downstream direction
     def write_demand(self, matrix, filename):
         with open("data/tegola/" + filename, 'w') as file:
             for i in range(11):
@@ -37,6 +40,7 @@ class network:
                     file.write(str(matrix[i][j]) + " ")
             file.write("\n")
 
+    # Convert 13x13 to 11x11 for new topology in downstream direction
     def fix_demands_downstream(self, filename, scale_factor):
         with open(filename, 'r') as file:
             reader = csv.reader(file, delimiter=" ")
@@ -50,6 +54,7 @@ class network:
 
                 return reordered_downstream * scale_factor
 
+    # Convert 13x13 to 11x11 for new topology in upstream direction
     def fix_demands_upstream(self, filename, scale_factor):
         with open(filename, 'r') as file:
             reader = csv.reader(file, delimiter=" ")
@@ -65,22 +70,36 @@ class network:
     
     # Overarching method for taking a 13x13 input and making it 11x11, then writing it to a file
     def fix_demands(self, downstream_file, upstream_file):
-        down_target_file = "max_demand_downstream.txt"
+        down_target_file = "max_deself.edges = list(self.allocations.keys())mand_downstream.txt"
         up_target_file = "max_demand_upstream.txt"
         scale_factor = 1
-        downstream_matrix = base_network.fix_demands_downstream(downstream_file, scale_factor)
-        upstream_matrix = base_network.fix_demands_upstream(upstream_file, scale_factor)
+        downstream_matrix = base.fix_demands_downstream(downstream_file, scale_factor)
+        upstream_matrix = base.fix_demands_upstream(upstream_file, scale_factor)
         self.write_demand(downstream_matrix, down_target_file)
         self.write_demand(upstream_matrix, up_target_file)
 
-    def even_allocations(self):
-        return
+    # Return the gateway edges in a network, given a sink node number and direction
+    def get_gateway_edges(self, sink, direction):
+        edges = list(self.allocations.keys())
+        if direction == "upstream":
+            gateway_edges = [edge for edge in edges if edge[1] == str(sink)]
+        elif direction == "downstream":
+            gateway_edges = [edge for edge in edges if edge[0] == str(sink)]
+        else:
+            print("direction for getting gateway edges was not upstream or downstream")
+            exit()
+        return gateway_edges
 
+    # Calculate the capacity for gateway edges in the basic 50/50 case
+    def calculate_capacity(self, edges, sink, direction):
+        gateway_edges = self.get_gateway_edges(sink, direction)
+        total_demand = sum([self.allocations.get(x) for x in gateway_edges])
+        return total_demand / len(gateway_edges)
 
 if __name__ == "__main__":
-    base_network = network("tegola", "topology.txt")
-    base_network.setup("demand.txt")
-    base_network.basic_solve()
-    base_network.fix_demands("downstream-demand.txt", "upstream-demand.txt")
-    base_network.allocations = base_network.get_allocations()
-    print(base_network.allocations)
+    base = network("tegola", "topology.txt")
+    base.setup("demand.txt")
+    base.basic_solve()
+    base.fix_demands("downstream-demand.txt", "upstream-demand.txt")
+    base.allocations = base.get_allocations()
+    print(base.calculate_capacity(list(base.allocations.keys()), 1, "downstream"))
