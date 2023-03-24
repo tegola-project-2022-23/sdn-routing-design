@@ -30,7 +30,8 @@ class Solver:
         max_flow = solver.solve()
 
     def get_allocations(self):
-        return get_edge_flow_allocations(self.network)
+        alloc = get_edge_flow_allocations(self.network)
+        self.allocations = alloc
     
     # Write demands to data files in either up or downstream direction
     def write_demand(self, matrix, filename):
@@ -104,26 +105,49 @@ class Solver:
         for edge in gateway_edges:
             self.network.edges[edge].capacity = capacity
 
-if __name__ == "__main__":
+    def remove_flow(self, prev_allocations):
+        for alloc in prev_allocations:
+            self.network.edges[alloc].capacity -= prev_allocations.get(alloc)
 
-    # Setup the network
-    base = Solver("tegola", "topology.txt")
-    base.setup("demand.txt")
 
-    #Generate basic flow allocations
-    base.basic_solve()
-    base.allocations = base.get_allocations()
-    #####
-    # This line can be uncommented to fix demands if necessary
-    #base.fix_demands("downstream-demand.txt", "upstream-demand.txt")
-    #####
-    
+
+# Run one iteration of the algorithm in one direction
+def run_cycle(source_sink, direction, prev_allocations):
+
+    # Setup the networkrow = new_array[0][3:]
+    net = Solver("tegola", "topology.txt")
+    net.setup(direction + "_demand.txt")
+
+    # If this is the second iteration, remove the allocated flows from the capacities
+    if prev_allocations:
+        net.remove_flow(prev_allocations)
+
+    # Generate basic flow allocations
+    net.basic_solve()
+    net.get_allocations()
+
     # Using basic allocations, recongiure the topology file to reflect the correct split
-    base.set_new_capacities(1, "downstream")
-    base.setup("demand.txt")
-    base.basic_solve()
-    new_allocations = base.get_allocations()
-    print(new_allocations)
+    net.set_new_capacities(source_sink, direction)
 
     # Re-run the max-flow solver with the new topology file to generate new allocations
-    #print(base.network.edges[('1', '7')].capacity)
+    net.setup(direction + "_demand.txt")
+    net.basic_solve()
+    net.get_allocations()
+
+    return(net.allocations)
+
+
+
+if __name__ == "__main__":
+
+    first_allocations = run_cycle(1, "downstream", {})
+    second_allocations = run_cycle(1, "upstream", first_allocations)
+
+    final_alloc = {}
+    for alloc in first_allocations:
+        final_alloc[alloc] = np.round(first_allocations.get(alloc) + second_allocations.get(alloc), 2)
+
+    net = Solver("tegola", "topology.txt")
+    net.network.draw(final_alloc)
+    print(final_alloc)
+    #base.network.draw(new_allocations)
