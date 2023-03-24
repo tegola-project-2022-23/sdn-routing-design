@@ -5,7 +5,7 @@ from MIPSolver import *
 from helper import *
 import numpy as np
 
-class network:
+class Solver:
     
     def __init__(self, net_name, topo_filename):
         self.network_name = net_name
@@ -79,8 +79,7 @@ class network:
         self.write_demand(upstream_matrix, up_target_file)
 
     # Return the gateway edges in a network, given a sink node number and direction
-    def get_gateway_edges(self, sink, direction):
-        edges = list(self.allocations.keys())
+    def get_gateway_edges(self, edges, sink, direction):
         if direction == "upstream":
             gateway_edges = [edge for edge in edges if edge[1] == str(sink)]
         elif direction == "downstream":
@@ -92,14 +91,39 @@ class network:
 
     # Calculate the capacity for gateway edges in the basic 50/50 case
     def calculate_capacity(self, edges, sink, direction):
-        gateway_edges = self.get_gateway_edges(sink, direction)
+        gateway_edges = self.get_gateway_edges(edges, sink, direction)
         total_demand = sum([self.allocations.get(x) for x in gateway_edges])
         return total_demand / len(gateway_edges)
 
+    # Reconfigure the topology file with the new capacities
+    def set_new_capacities(self, sink, direction):
+        edges = list(self.allocations.keys())
+        gateway_edges = self.get_gateway_edges(edges, sink, direction)
+        capacity = self.calculate_capacity(edges, sink, direction)
+
+        for edge in gateway_edges:
+            self.network.edges[edge].capacity = capacity
+
 if __name__ == "__main__":
-    base = network("tegola", "topology.txt")
+
+    # Setup the network
+    base = Solver("tegola", "topology.txt")
+    base.setup("demand.txt")
+
+    #Generate basic flow allocations
+    base.basic_solve()
+    base.allocations = base.get_allocations()
+    #####
+    # This line can be uncommented to fix demands if necessary
+    #base.fix_demands("downstream-demand.txt", "upstream-demand.txt")
+    #####
+    
+    # Using basic allocations, recongiure the topology file to reflect the correct split
+    base.set_new_capacities(1, "downstream")
     base.setup("demand.txt")
     base.basic_solve()
-    base.fix_demands("downstream-demand.txt", "upstream-demand.txt")
-    base.allocations = base.get_allocations()
-    print(base.calculate_capacity(list(base.allocations.keys()), 1, "downstream"))
+    new_allocations = base.get_allocations()
+    print(new_allocations)
+
+    # Re-run the max-flow solver with the new topology file to generate new allocations
+    #print(base.network.edges[('1', '7')].capacity)
