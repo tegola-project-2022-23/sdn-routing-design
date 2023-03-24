@@ -112,7 +112,7 @@ class Solver:
 
 
 # Run one iteration of the algorithm in one direction
-def run_cycle(source_sink, direction, prev_allocations):
+def run_cycle(source_sink, direction, prev_allocations, gateway_proportions):
 
     # Setup the networkrow = new_array[0][3:]
     net = Solver("tegola", "topology.txt")
@@ -127,7 +127,10 @@ def run_cycle(source_sink, direction, prev_allocations):
     net.get_allocations()
 
     # Using basic allocations, recongiure the topology file to reflect the correct split
-    net.set_new_capacities(source_sink, direction)
+    if gateway_proportions:
+        arbitrary_splits(source_sink, direction, gateway_proportions, net)
+    else:
+        net.set_new_capacities(source_sink, direction)
 
     # Re-run the max-flow solver with the new topology file to generate new allocations
     net.setup(direction + "_demand.txt")
@@ -137,11 +140,18 @@ def run_cycle(source_sink, direction, prev_allocations):
     return(net.allocations)
 
 
+# gateway_proportions should be a dictionary of gateway:%split pairs.
+def arbitrary_splits(source_sink, direction, gateway_proportions, net):
+    assert(np.round(sum(gateway_proportions.values()), 0) == 100)
+    total_demand = sum([net.allocations.get(x) for x in gateway_proportions.keys()])
+    for gateway in gateway_proportions:
+        net.network.edges[gateway].capacity = total_demand * (gateway_proportions.get(gateway) / 100)
+
 
 if __name__ == "__main__":
 
-    first_allocations = run_cycle(1, "downstream", {})
-    second_allocations = run_cycle(1, "upstream", first_allocations)
+    first_allocations = run_cycle(1, "downstream", {}, {('1','2'): 20, ('1','7'): 80})
+    second_allocations = run_cycle(1, "upstream", first_allocations, {('2','1'): 20, ('7','1'): 80})
 
     final_alloc = {}
     for alloc in first_allocations:
