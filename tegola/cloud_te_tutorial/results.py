@@ -138,6 +138,8 @@ def run_cycle(source_sink, direction, prev_allocations, gateway_proportions):
     net.basic_solve()
     net.get_allocations()
 
+    print("Unmet demands: " + str(sum(get_demands_unmet(net.network).values())))
+
     return(net.allocations)
 
 
@@ -164,8 +166,8 @@ def algorithm(source_sink, gateway_proportions):
         final_alloc[alloc] = np.round(first_allocations.get(alloc) + second_allocations.get(alloc), 2)
 
     net = Solver("tegola", "downstream_topology.txt")
-    net.network.draw(final_alloc)
-
+    #net.network.draw(final_alloc)
+    
     return final_alloc
 
 # Gets basic allocations
@@ -189,11 +191,82 @@ def generic_max_flow(net_name):
         final_alloc[alloc] = np.round(upstream_alloc.get(alloc) + downstream_alloc.get(alloc), 2)
 
     net = Solver("tegola", "downstream_topology.txt")
-    net.network.draw(final_alloc)
+    #net.network.draw(final_alloc)
 
+# Run both iterations of the algorithm to produce the final allocations for any arbitrary split
+def unmet_algorithm(source_sink, gateway_proportions):
+    unmet_one = unmet_run_cycle(1, "downstream", {}, gateway_proportions)
+    first_allocations = unmet_one[0]
+    first_unmet = unmet_one[1]
+
+    # get reverse direction proportions
+    second_proportions = {}
+    for item in gateway_proportions:
+        second_proportions[(item[1], item[0])] = gateway_proportions.get(item)
+
+    unmet_two = unmet_run_cycle(1, "upstream", first_allocations, second_proportions)
+    second_allocations = unmet_two[0]
+    second_unmet = unmet_two[1]
+
+    final_alloc = {}
+    for alloc in first_allocations:
+        final_alloc[alloc] = np.round(first_allocations.get(alloc) + second_allocations.get(alloc), 2)
+
+    net = Solver("tegola", "downstream_topology.txt")
+    #net.network.draw(final_alloc)
+    
+    return first_unmet + second_unmet
+
+
+# Run one iteration of the algorithm in one direction
+def unmet_run_cycle(source_sink, direction, prev_allocations, gateway_proportions):
+
+    # Setup the networkrow = new_array[0][3:]
+    net = Solver("tegola", "unmet_topology.txt")
+    net.setup(direction + "_demand.txt")
+    for edge in net.network.demands:
+        net.network.demands[edge].amount = net.network.demands[edge].amount * 1.5
+    #print(net.network.demands[('1','2')].amount)
+
+    # If this is the second iteration, remove the allocated flows from the capacities
+    if prev_allocations:
+        net.remove_flow(prev_allocations)
+
+    # Generate basic flow allocations
+    net.basic_solve()
+    net.get_allocations()
+
+    # Using basic allocations, recongiure the topology file to reflect the correct split
+    if gateway_proportions:
+        arbitrary_splits(source_sink, direction, gateway_proportions, net)
+    else:
+        net.set_new_capacities(source_sink, direction)
+
+    # Re-run the max-flow solver with the new topology file to generate new allocations
+    net.setup(direction + "_demand.txt")
+    #for edge in net.network.demands:
+        #net.network.demands[edge].amount = net.network.demands[edge].amount * 1.5
+    net.basic_solve()
+    net.get_allocations()
+
+    unmet = sum(get_demands_unmet(net.network).values())
+    print("Unmet demands: " + str(unmet))
+
+    return(net.allocations, unmet)
+
+
+def unmet_demands():
+
+    unmet_demands = []
+    for i in range(0, 101):
+        unmet = unmet_algorithm(1, {('1','2'): i, ('1','7'): 100 - i})
+        unmet_demands.append(unmet)
+        print(unmet)
+    return
 
 if __name__ == "__main__":
 
     #generic_max_flow("tegola")
+    #alloc = algorithm(1, {('1','2'): 1, ('1','7'): 99})
 
-    alloc = algorithm(1, {('1','2'): 1, ('1','7'): 99})
+    unmet_demands()
