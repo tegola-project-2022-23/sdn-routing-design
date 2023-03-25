@@ -107,7 +107,8 @@ class Solver:
 
     def remove_flow(self, prev_allocations):
         for alloc in prev_allocations:
-            self.network.edges[alloc].capacity -= prev_allocations.get(alloc)
+            if self.network.edges[alloc].capacity != 0:
+                self.network.edges[alloc].capacity -= prev_allocations.get(alloc)
 
 
 
@@ -115,7 +116,7 @@ class Solver:
 def run_cycle(source_sink, direction, prev_allocations, gateway_proportions):
 
     # Setup the networkrow = new_array[0][3:]
-    net = Solver("tegola", "topology.txt")
+    net = Solver("tegola", direction + "_topology.txt")
     net.setup(direction + "_demand.txt")
 
     # If this is the second iteration, remove the allocated flows from the capacities
@@ -147,17 +148,52 @@ def arbitrary_splits(source_sink, direction, gateway_proportions, net):
     for gateway in gateway_proportions:
         net.network.edges[gateway].capacity = total_demand * (gateway_proportions.get(gateway) / 100)
 
+# Run both iterations of the algorithm to produce the final allocations for any arbitrary split
+def algorithm(source_sink, gateway_proportions):
+    first_allocations = run_cycle(1, "downstream", {}, gateway_proportions)
 
-if __name__ == "__main__":
+    # get reverse direction proportions
+    second_proportions = {}
+    for item in gateway_proportions:
+        second_proportions[(item[1], item[0])] = gateway_proportions.get(item)
 
-    first_allocations = run_cycle(1, "downstream", {}, {('1','2'): 20, ('1','7'): 80})
-    second_allocations = run_cycle(1, "upstream", first_allocations, {('2','1'): 20, ('7','1'): 80})
+    second_allocations = run_cycle(1, "upstream", first_allocations, second_proportions)
 
     final_alloc = {}
     for alloc in first_allocations:
         final_alloc[alloc] = np.round(first_allocations.get(alloc) + second_allocations.get(alloc), 2)
 
-    net = Solver("tegola", "topology.txt")
+    net = Solver("tegola", "downstream_topology.txt")
     net.network.draw(final_alloc)
-    print(final_alloc)
-    #base.network.draw(new_allocations)
+
+    return final_alloc
+
+# Gets basic allocations
+def generic_max_flow(net_name):
+    up_net = Solver(net_name, "upstream_topology.txt")
+    up_net.setup("upstream_demand.txt")
+    up_net.basic_solve()
+    up_net.get_allocations()
+    upstream_alloc = up_net.allocations
+
+    down_net = Solver(net_name, "downstream_topology.txt")
+    down_net.setup("downstream_demand.txt")
+    down_net.remove_flow(upstream_alloc)
+    down_net.basic_solve()
+    down_net.get_allocations()
+    downstream_alloc = down_net.allocations
+    
+
+    final_alloc = {}
+    for alloc in upstream_alloc:
+        final_alloc[alloc] = np.round(upstream_alloc.get(alloc) + downstream_alloc.get(alloc), 2)
+
+    net = Solver("tegola", "downstream_topology.txt")
+    net.network.draw(final_alloc)
+
+
+if __name__ == "__main__":
+
+    #generic_max_flow("tegola")
+
+    alloc = algorithm(1, {('1','2'): 1, ('1','7'): 99})
