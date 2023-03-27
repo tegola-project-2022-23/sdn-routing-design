@@ -30,6 +30,8 @@ def get_edge_flow_allocations(network):
     for edge in network.edges.values():
         allocation = 0
         for tunnel in edge.tunnels:
+            if tunnel.v_flow.value == None:
+                tunnel.v_flow.value = 0
             allocation += tunnel.v_flow.value
         flow_labels[edge.e] = round(allocation[0], 2)
     return flow_labels

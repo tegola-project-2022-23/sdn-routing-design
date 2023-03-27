@@ -4,6 +4,7 @@ from TESolver import *
 from MIPSolver import *
 from helper import *
 import numpy as np
+import matplotlib.pyplot as plt
 
 class Solver:
     
@@ -166,7 +167,7 @@ def algorithm(source_sink, gateway_proportions):
         final_alloc[alloc] = np.round(first_allocations.get(alloc) + second_allocations.get(alloc), 2)
 
     net = Solver("tegola", "downstream_topology.txt")
-    #net.network.draw(final_alloc)
+    net.network.draw(final_alloc)
     
     return final_alloc
 
@@ -222,10 +223,10 @@ def unmet_algorithm(source_sink, gateway_proportions):
 def unmet_run_cycle(source_sink, direction, prev_allocations, gateway_proportions):
 
     # Setup the networkrow = new_array[0][3:]
-    net = Solver("tegola", "unmet_topology.txt")
+    net = Solver("tegola", "unmet_topology-copy.txt")
     net.setup(direction + "_demand.txt")
     for edge in net.network.demands:
-        net.network.demands[edge].amount = net.network.demands[edge].amount * 1.5
+        net.network.demands[edge].amount = net.network.demands[edge].amount * 5
     #print(net.network.demands[('1','2')].amount)
 
     # If this is the second iteration, remove the allocated flows from the capacities
@@ -245,7 +246,7 @@ def unmet_run_cycle(source_sink, direction, prev_allocations, gateway_proportion
     # Re-run the max-flow solver with the new topology file to generate new allocations
     net.setup(direction + "_demand.txt")
     #for edge in net.network.demands:
-        #net.network.demands[edge].amount = net.network.demands[edge].amount * 1.5
+    #    net.network.demands[edge].amount = net.network.demands[edge].amount * 5
     net.basic_solve()
     net.get_allocations()
 
@@ -260,13 +261,22 @@ def unmet_demands():
     unmet_demands = []
     for i in range(0, 101):
         unmet = unmet_algorithm(1, {('1','2'): i, ('1','7'): 100 - i})
+        print("iteration: " + str(i))
         unmet_demands.append(unmet)
-        print(unmet)
-    return
+    return unmet_demands
 
 if __name__ == "__main__":
 
     #generic_max_flow("tegola")
-    #alloc = algorithm(1, {('1','2'): 1, ('1','7'): 99})
+    alloc = algorithm(1, {('1','2'): 10, ('1','7'): 90})
 
-    unmet_demands()
+    #unmet = unmet_demands()
+
+    #fig, ax = plt.subplots(1,1, figsize=(8,8))
+    #ax.plot(np.arange(0,101,1), unmet, linewidth=2)
+    #ax.set_ylabel("Unmet Demands (Mb)", fontsize = 14)
+    #ax.set_xlabel("Percentage (%) of Traffic Routed Through MHI", fontsize = 14)
+    #ax.set_title("Unmet Demands in the Tegola Network for Five Times More Traffic", fontsize = 16)
+    #plt.show()
+
+    #alloc = algorithm(1, {('1','2'): 1, ('1','7'): 99})
